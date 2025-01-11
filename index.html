@@ -4,285 +4,66 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tumbler</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --bg-light: #ffffff;
-      --bg-white: #ffffff;
-      --text-primary: #1a1d24;
-      --text-secondary: #64748b;
-      --accent-blue: #3b82f6;
-      --accent-gray: #f0f2f5;
-      --accent-green: #10b981;
-      --accent-black: #000000;
-			--accent-light: #ecfdf5;
-			--border-light: #e1e5ef;
-			--gradient-green: linear-gradient(135deg, #059669, #10b981);
-      --gradient: linear-gradient(135deg, #3b82f6, #10b981);
-      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
-      --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg-light);
-      color: var(--text-primary);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      background: var(--accent-gray);
-      padding: 2rem;
-      border-radius: 20px;
-      box-shadow: var(--shadow-lg);
-			border-width: 2px;
-    	border-color: var(--border-light);
-    	border-style: solid;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 2rem;
-      background: var(--accent-black);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-align: center;
-			text-transform: uppercase;
-    }
-
-    .tumbler {
-      /* background: var(--bg-light); */
-      padding: 2rem;
-      border-radius: 15px;
-      margin: 2rem 0;
-      overflow: visible;
-      position: relative;
-    }
-
-    .word-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      min-height: 80px;
-      padding-top: 15px;
-    }
-
-    .word-slot {
-      background: var(--bg-white);
-      padding: 1.5rem;
-      position: relative;
-      overflow: visible;
-      box-shadow: var(--shadow-sm);
-      min-height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-left: solid #000000 4px;
-    }
-
-    .slot-label {
-      position: absolute;
-      top: -2.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--accent-black);
-      color: white;
-      padding: 0.3rem 1rem;
-      border-radius: 15px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      white-space: nowrap;
-      box-shadow: var(--shadow-sm);
-      z-index: 1;
-      max-width: 90%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .word {
-      text-align: center;
-      font-size: 1.1rem;
-      line-height: 1.4;
-      font-weight: 500;
-      color: var(--text-primary);
-      position: absolute;
-      width: 90%;
-      left: 5%;
-      transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-      word-wrap: break-word;
-      hyphens: auto;
+    @keyframes tumble {
+      0% { transform: translateY(-100%); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
     }
 
     .word.tumble {
       animation: tumble 0.5s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
-    @keyframes tumble {
-      0% { transform: translateY(-100%); opacity: 0; }
-      100% { transform: translateY(0); opacity: 1; }
-    }
-
-    .controls {
-      display: flex;
-      justify-content: center;
-      margin-top: 2rem;
-    }
-
-    .fetch-button {
-      font-size: .9rem;
-      padding: .5rem 1.2rem;
-      width: auto;
-			background: var(--text-secondary);
-			border-radius: 6px;
-    }
-
-    .primary-button {
-      background: var(--gradient-green);
-      color: var(--bg-white);
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 1.2rem;
-      font-weight: bold;
-      width: auto;
-      min-width: 200px;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    button {
-      background: var(--gradient);
-      color: var(--bg-white);
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: bold;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    button svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .settings-panel {
-      /* background: var(--bg-light); */
-      padding: 1.5rem;
-      border-radius: 15px;
-      margin-top: 2rem;
-    }
-
-    input[type="url"] {
-      width: 100%;
-      padding: 0.5rem;
-      background: var(--bg-white);
-      border: 1px solid var(--text-secondary);
-      border-radius: 6px;
-      color: var(--text-primary);
-      font-size: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .loading {
+    .word {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: var(--accent-gray);
-      background: var(--accent-black);
-			padding: 1rem;
-      font-size: 1.2rem;
-			border-radius: 10px;
+      width: 90%;
+      left: 5%;
+      transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
-    .error {
-      background: #fee2e2;
-      color: #dc2626;
-      padding: 1rem;
-      border-radius: 8px;
-      margin: 1rem 0;
-      display: none;
-    }
-
-    @media (max-width: 768px) {
-      .word-container {
-        grid-template-columns: 1fr;
-      }
-      
-      .word-slot {
-        width: 100%;
-      }
-
-      .container {
-        padding: 1rem;
-      }
+    .gradient-green {
+      background: linear-gradient(135deg, #059669, #10b981);
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <h1>Tumbler</h1>
+<body class="min-h-screen flex items-center justify-center bg-white p-5">
+  <div class="w-full max-w-[1200px] bg-[#f0f2f5] p-8 rounded-2xl shadow-xl border-2 border-[#e1e5ef]">
+    <h1 class="text-4xl mb-8 text-center uppercase font-bold text-black">Tumbler</h1>
     
-    <div class="tumbler">
-      <div id="wordContainer" class="word-container">
+    <div class="py-8 relative overflow-visible">
+      <div id="wordContainer" class="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6 min-h-[80px] pt-4">
         <!-- Word slots will be generated here -->
       </div>
-      <div id="loadingIndicator" class="loading" style="display: none">Loading...</div>
+      <div id="loadingIndicator" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black text-white p-4 rounded-lg text-lg">
+        Loading...
+      </div>
     </div>
 
-    <div class="controls">
-      <button id="generateBtn" class="primary-button" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div class="flex justify-center mt-8">
+      <button id="generateBtn" disabled 
+              class="gradient-green text-white px-8 py-4 rounded-lg text-xl font-bold min-w-[200px] flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
         Generate
       </button>
     </div>
 
-    <div class="settings-panel">
-      <input type="url" id="sheetsUrl" placeholder="Enter Google Sheets CSV URL">
-      <button id="fetchBtn" class="fetch-button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div class="mt-8 p-6">
+      <input type="url" id="sheetsUrl" 
+             class="w-full p-2 bg-white border border-gray-400 rounded-md text-base mb-4" 
+             placeholder="Enter Google Sheets CSV URL">
+      <button id="fetchBtn" 
+              class="bg-gray-500 text-white px-5 py-2 rounded-md text-sm flex items-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
         </svg>
         Load Sheet
       </button>
     </div>
 
-    <div id="error" class="error"></div>
+    <div id="error" class="hidden bg-red-100 text-red-600 p-4 rounded-lg mt-4"></div>
   </div>
 
   <script type="module">
@@ -302,15 +83,15 @@
 
     function showError(message) {
       errorDiv.textContent = message;
-      errorDiv.style.display = 'block';
+      errorDiv.classList.remove('hidden');
     }
 
     function hideError() {
-      errorDiv.style.display = 'none';
+      errorDiv.classList.add('hidden');
     }
 
     function setLoading(isLoading) {
-      loadingIndicator.style.display = isLoading ? 'block' : 'none';
+      loadingIndicator.classList.toggle('hidden', !isLoading);
       fetchBtn.disabled = isLoading;
       generateBtn.disabled = isLoading;
     }
@@ -319,16 +100,15 @@
       wordContainer.innerHTML = '';
       for (let i = 0; i < count; i++) {
         const slot = document.createElement('div');
-        slot.className = 'word-slot';
+        slot.className = 'relative overflow-visible flex items-center justify-center min-h-[80px] bg-white p-6 shadow-sm border-l-4 border-black';
         
-        // Add label
         const label = document.createElement('div');
-        label.className = 'slot-label';
+        label.className = 'absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-1 rounded-full text-sm font-medium whitespace-nowrap shadow-sm z-10 max-w-[90%] overflow-hidden text-ellipsis';
         label.textContent = headers[i] || `Column ${i + 1}`;
         slot.appendChild(label);
 
         const word = document.createElement('div');
-        word.className = 'word';
+        word.className = 'word text-center text-lg font-medium break-words hyphens-auto';
         word.dataset.index = i;
         slot.appendChild(word);
         wordContainer.appendChild(slot);
