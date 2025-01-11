@@ -1,5 +1,5 @@
 # Word Tumbler for Google Sheets
 
-This is a simple randomizer for Google Sheets. You can specify a default Google Sheet URL with CSV set as the export format in `index.html`. Make sure to publish the Google Sheet publicly and copy set the link to CSV.
+This is a simple randomizer for Google Sheets. In `index.html`, you can specify a default public Google Sheet url with 'CSV' set as the output format.
 
 The UI will load all columns and use the first row as labels.
