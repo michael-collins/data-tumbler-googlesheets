@@ -83,10 +83,27 @@
       display: flex;
       align-items: center;
       justify-content: center;
- border-bottom: 4px #000000 solid;
+ border-left: 4px #000000 solid;
 
     }
-
+.slot-label {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gradient);
+      color: white;
+      padding: 0.3rem 1rem;
+      border-radius: 15px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      white-space: nowrap;
+      box-shadow: var(--shadow-sm);
+      z-index: 1;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .word {
       text-align: center;
       font-size: 1.1rem;
@@ -263,7 +280,6 @@
 
   <!-- JavaScript remains exactly the same -->
   <script type="module">
-    // Previous JavaScript remains unchanged
     import Papa from 'papaparse';
 
     const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS5jAMbi-ggWEDgRH3xURkCuVi2QQ_HiNPHAsq80EMMvqR0imJuaZTMSW3CdiXJtsXzAM2HQ_Hiizao/pub?gid=0&single=true&output=csv';
@@ -293,11 +309,18 @@
       generateBtn.disabled = isLoading;
     }
 
-    function createWordSlots(count) {
+    function createWordSlots(count, headers) {
       wordContainer.innerHTML = '';
       for (let i = 0; i < count; i++) {
         const slot = document.createElement('div');
         slot.className = 'word-slot';
+        
+        // Add label
+        const label = document.createElement('div');
+        label.className = 'slot-label';
+        label.textContent = headers[i] || `Column ${i + 1}`;
+        slot.appendChild(label);
+
         const word = document.createElement('div');
         word.className = 'word';
         word.dataset.index = i;
@@ -366,8 +389,9 @@
           throw new Error('Please provide at least one header row and one data row');
         }
 
+        const headers = data[0];
         wordColumns = [];
-        const numColumns = data[0].length;
+        const numColumns = headers.length;
 
         for (let col = 0; col < numColumns; col++) {
           wordColumns[col] = [];
@@ -382,7 +406,7 @@
           throw new Error('Each column must contain at least one word');
         }
 
-        createWordSlots(wordColumns.length);
+        createWordSlots(numColumns, headers);
         hideError();
         generateBtn.disabled = false;
         return true;
