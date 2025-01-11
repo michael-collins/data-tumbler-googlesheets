@@ -1,61 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tumbler</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @keyframes tumble {
-      0% { transform: translateY(-100%); opacity: 0; }
-      100% { transform: translateY(0); opacity: 1; }
-    }
-
-    .word.tumble {
-      animation: tumble 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-
-    .word {
-      position: absolute;
-      width: 90%;
-      left: 5%;
-      transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-
     .gradient-green {
       background: linear-gradient(135deg, #059669, #10b981);
     }
   </style>
+  <link rel="stylesheet" href="/src/elements/tumbler-word.css">
 </head>
+
 <body class="min-h-screen flex items-center justify-center bg-white p-5">
   <div class="w-full max-w-[1200px] bg-[#f0f2f5] p-8 rounded-2xl shadow-xl border-2 border-[#e1e5ef]">
-<!--     <h1 class="text-4xl mb-8 text-center uppercase font-bold text-black">Tumbler</h1> -->
-    
+    <!--     <h1 class="text-4xl mb-8 text-center uppercase font-bold text-black">Tumbler</h1> -->
+
     <div class="py-8 relative overflow-visible">
-      <div id="wordContainer" class="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-6 gap-y-16  min-h-[80px] pt-4">
+      <div id="wordContainer"
+        class="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-6 gap-y-16  min-h-[80px] pt-4">
         <!-- Word slots will be generated here -->
       </div>
-      <div id="loadingIndicator" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black text-white p-4 rounded-lg text-lg">
+      <div id="loadingIndicator"
+        class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black text-white p-4 rounded-lg text-lg">
         Loading...
       </div>
     </div>
 
     <div class="flex justify-center mt-8">
-      <button id="generateBtn" disabled 
-              class="gradient-green text-white px-8 py-4 rounded-lg text-xl font-bold min-w-[200px] flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+      <button id="generateBtn" disabled
+        class="gradient-green text-white px-8 py-4 rounded-lg text-xl font-bold min-w-[200px] flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <path
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
         Tumble
       </button>
     </div>
 
     <div class="mt-8 p-6">
-      <input type="url" id="sheetsUrl" 
-             class="w-full p-2 bg-white border border-gray-400 rounded-md text-base mb-4" 
-             placeholder="Enter Google Sheets CSV URL">
-      <button id="fetchBtn" 
-              class="bg-gray-500 text-white px-5 py-2 rounded-md text-sm flex items-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md">
+      <input type="url" id="sheetsUrl" class="w-full p-2 bg-white border border-gray-400 rounded-md text-base mb-4"
+        placeholder="Enter Google Sheets CSV URL">
+      <button id="fetchBtn"
+        class="bg-gray-500 text-white px-5 py-2 rounded-md text-sm flex items-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
         </svg>
@@ -65,163 +54,7 @@
 
     <div id="error" class="hidden bg-red-100 text-red-600 p-4 rounded-lg mt-4"></div>
   </div>
-
-  <script type="module">
-    import Papa from 'papaparse';
-
-    const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS5jAMbi-ggWEDgRH3xURkCuVi2QQ_HiNPHAsq80EMMvqR0imJuaZTMSW3CdiXJtsXzAM2HQ_Hiizao/pub?gid=0&single=true&output=csv';
-
-    const sheetsUrl = document.getElementById('sheetsUrl');
-    const generateBtn = document.getElementById('generateBtn');
-    const fetchBtn = document.getElementById('fetchBtn');
-    const errorDiv = document.getElementById('error');
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    const wordContainer = document.getElementById('wordContainer');
-
-    let wordColumns = [];
-    let currentWords = [];
-
-    function showError(message) {
-      errorDiv.textContent = message;
-      errorDiv.classList.remove('hidden');
-    }
-
-    function hideError() {
-      errorDiv.classList.add('hidden');
-    }
-
-    function setLoading(isLoading) {
-      loadingIndicator.classList.toggle('hidden', !isLoading);
-      fetchBtn.disabled = isLoading;
-      generateBtn.disabled = isLoading;
-    }
-
-    function createWordSlots(count, headers) {
-      wordContainer.innerHTML = '';
-      for (let i = 0; i < count; i++) {
-        const slot = document.createElement('div');
-        slot.className = 'relative overflow-visible flex items-center justify-center min-h-[80px] bg-white p-6 shadow-sm border-l-4 border-black';
-        
-        const label = document.createElement('div');
-        label.className = 'absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-1 rounded-full text-sm font-medium whitespace-nowrap shadow-sm z-10 max-w-[90%] overflow-hidden text-ellipsis';
-        label.textContent = headers[i] || `Column ${i + 1}`;
-        slot.appendChild(label);
-
-        const word = document.createElement('div');
-        word.className = 'word text-center text-lg font-medium break-words hyphens-auto';
-        word.dataset.index = i;
-        slot.appendChild(word);
-        wordContainer.appendChild(slot);
-      }
-      currentWords = Array(count).fill('');
-    }
-
-    async function animateWord(element, newWord) {
-      const index = parseInt(element.dataset.index);
-      if (currentWords[index] === newWord) return;
-
-      element.classList.remove('tumble');
-      element.offsetHeight; // Force reflow
-      element.textContent = newWord;
-      element.classList.add('tumble');
-      currentWords[index] = newWord;
-    }
-
-    async function generateCombination() {
-      if (wordColumns.length === 0) return;
-
-      const wordElements = document.querySelectorAll('.word');
-      const delays = wordElements.length;
-
-      wordElements.forEach((element, index) => {
-        setTimeout(() => {
-          const column = wordColumns[index];
-          const randomIndex = Math.floor(Math.random() * column.length);
-          animateWord(element, column[randomIndex]);
-        }, index * 100);
-      });
-    }
-
-    async function fetchSheetData(url) {
-      try {
-        setLoading(true);
-        hideError();
-
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Failed to fetch sheet data. Make sure the URL is public and correctly formatted.');
-        }
-
-        const csvData = await response.text();
-        return processCSV(csvData);
-      } catch (error) {
-        showError(error.message);
-        return false;
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    function processCSV(csv) {
-      try {
-        const results = Papa.parse(csv, { header: false });
-        
-        if (results.errors.length > 0) {
-          throw new Error('Invalid CSV format');
-        }
-
-        const data = results.data;
-        if (data.length < 2) {
-          throw new Error('Please provide at least one header row and one data row');
-        }
-
-        const headers = data[0];
-        wordColumns = [];
-        const numColumns = headers.length;
-
-        for (let col = 0; col < numColumns; col++) {
-          wordColumns[col] = [];
-          for (let row = 1; row < data.length; row++) {
-            if (data[row][col]?.trim()) {
-              wordColumns[col].push(data[row][col].trim());
-            }
-          }
-        }
-
-        if (wordColumns.some(col => col.length === 0)) {
-          throw new Error('Each column must contain at least one word');
-        }
-
-        createWordSlots(numColumns, headers);
-        hideError();
-        generateBtn.disabled = false;
-        return true;
-      } catch (error) {
-        showError(error.message);
-        generateBtn.disabled = true;
-        return false;
-      }
-    }
-
-    generateBtn.addEventListener('click', generateCombination);
-
-    fetchBtn.addEventListener('click', async () => {
-      const url = sheetsUrl.value.trim() || DEFAULT_SHEET_URL;
-      if (await fetchSheetData(url)) {
-        generateCombination();
-      }
-    });
-
-    // Initialize with default dataset
-    async function init() {
-      sheetsUrl.value = DEFAULT_SHEET_URL;
-      if (await fetchSheetData(DEFAULT_SHEET_URL)) {
-        generateCombination();
-      }
-    }
-
-    // Start the app
-    init();
-  </script>
+  <script src="/src/index.js" type="module"></script>
 </body>
+
 </html>

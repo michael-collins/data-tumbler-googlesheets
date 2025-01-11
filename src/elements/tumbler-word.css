@@ -1,0 +1,26 @@
+tumbler-word {
+  display: contents;
+}
+
+@keyframes tumble {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+tumbler-word.tumble .word {
+  animation: tumble 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+tumbler-word.word {
+  position: absolute;
+  width: 90%;
+  left: 5%;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
