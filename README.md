@@ -4,5 +4,5 @@ This is a simple randomizer that works with Google Sheets as the data source. It
 
 To change the default URL, update the `DEFAULT_SHEET_URL` value in `index.html`.
 
-**Example Google Doc:** https://docs.google.com/spreadsheets/d/1CG_G7xA2PMgo3byQ6jyHbVz-Xr_4CYZAhsmortPA-QY/edit?gid=0#gid=0
+**[Example Google Doc](https://docs.google.com/spreadsheets/d/1CG_G7xA2PMgo3byQ6jyHbVz-Xr_4CYZAhsmortPA-QY/edit?gid=0#gid=0)**
 
