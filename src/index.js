@@ -16,7 +16,7 @@ Examples:
 import Papa from 'papaparse';
 import './elements/tumbler-word.js';
 
-const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTlR3laPfnv3w2SCq4YWbu8xdmo-5WFEa6zhX4xBuSDLRvFsXDDE4d6pubJFUsppGmJ5Y781jneXGkx/pub?output=csv';
+const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS5jAMbi-ggWEDgRH3xURkCuVi2QQ_HiNPHAsq80EMMvqR0imJuaZTMSW3CdiXJtsXzAM2HQ_Hiizao/pub?gid=0&single=true&output=csv';
 
 function mulberry32(a) {
   return function() {
