@@ -85,6 +85,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function createWordSlots(count, headers) {
     wordContainer.innerHTML = '';
+    
+    // Check if we have data and if any words are selected
+    if (count === 0 || !headers || headers.length === 0 || !getUrlParams().seed) {
+      wordContainer.classList.add('hidden');
+      return;
+    }
+    
+    wordContainer.classList.remove('hidden');
+    
     for (let i = 0; i < count; i++) {
       const slot = document.createElement('tumbler-word');
       slot.setAttribute('label', headers[i] || `Column ${i + 1}`);
@@ -111,6 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.history.pushState({}, '', newUrl);
   
+    // Ensure word slots are created if they don't exist
+    if (!wordContainer.children.length) {
+      createWordSlots(wordColumns.length, wordColumns.map((_, i) => `Column ${i + 1}`));
+    }
+  
+    // Make sure word container is visible when generating combinations
+    wordContainer.classList.remove('hidden');
+  
     const wordElements = document.querySelectorAll('tumbler-word');
     wordElements.forEach((element, index) => {
       setTimeout(() => {
@@ -133,8 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (result.success) {
         hideError();
         createWordSlots(wordColumns.length, result.headers);
+        return true;
       }
-      return result.success;
+      return false;
     } catch (error) {
       console.error('Fetch error:', error);
       showError(error.message);
