@@ -5,14 +5,12 @@ URL Parameters for API-like access:
 - ?hide-controls=true : Hide all UI controls (clean view mode)
 - ?sheet=URL : Use custom Google Sheets URL (must be published to web as CSV)
 
-
 Examples:
 /index.html?seed=42 
 /index.html?random=true
 /index.html?hide-controls=true
 /index.html?seed=42&sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2Fe%2F2PACX-1vS5jAMbi-ggWEDgRH3xURkCuVi2QQ_HiNPHAsq80EMMvqR0imJuaZTMSW3CdiXJtsXzAM2HQ_Hiizao%2Fpub%3Fgid%3D0%26single%3Dtrue%26output%3Dcsv
 */
-
 import Papa from 'papaparse';
 import './elements/tumbler-word.js';
 
@@ -35,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingIndicator = document.getElementById('loadingIndicator');
   const wordContainer = document.getElementById('wordContainer');
 
+  let loadedSheetUrl = null;
   let wordColumns = [];
   let currentWords = [];
 
@@ -86,7 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function createWordSlots(count, headers) {
     wordContainer.innerHTML = '';
     
-    // Check if we have data and if any words are selected
     if (count === 0 || !headers || headers.length === 0 || !getUrlParams().seed) {
       wordContainer.classList.add('hidden');
       return;
@@ -107,25 +105,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (wordColumns.length === 0) return;
   
     const params = getUrlParams();
-    // Only generate new seed if tumbling or no seed exists
     const newSeed = forceNewSeed ? Math.floor(Math.random() * 1000000) : (params.seed || Math.floor(Math.random() * 1000000));
     const random = mulberry32(newSeed);
   
-    // Update URL with seed
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('seed', newSeed);
-    // Preserve sheet URL if it exists
     if (params.sheetUrl !== DEFAULT_SHEET_URL) {
       newUrl.searchParams.set('sheet', params.sheetUrl);
     }
     window.history.pushState({}, '', newUrl);
   
-    // Ensure word slots are created if they don't exist
     if (!wordContainer.children.length) {
       createWordSlots(wordColumns.length, wordColumns.map((_, i) => `Column ${i + 1}`));
     }
   
-    // Make sure word container is visible when generating combinations
     wordContainer.classList.remove('hidden');
   
     const wordElements = document.querySelectorAll('tumbler-word');
@@ -139,6 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function fetchSheetData(url) {
+    if (url === loadedSheetUrl) {
+      return true;
+    }
+
     try {
       setLoading(true);
       const response = await fetch(url);
@@ -150,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (result.success) {
         hideError();
         createWordSlots(wordColumns.length, result.headers);
+        loadedSheetUrl = url;
         return true;
       }
       return false;
@@ -214,6 +212,16 @@ document.addEventListener('DOMContentLoaded', () => {
       newUrl.searchParams.set('sheet', url);
       window.history.pushState({}, '', newUrl);
       generateCombination();
+    }
+  });
+
+  window.addEventListener('popstate', async () => {
+    const params = getUrlParams();
+    sheetsUrl.value = params.sheetUrl;
+    if (await fetchSheetData(params.sheetUrl)) {
+      if (params.seed) {
+        generateCombination(false);
+      }
     }
   });
 
