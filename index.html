@@ -15,7 +15,7 @@
 </head>
 
 <body class="min-h-screen flex items-center justify-center bg-white p-5">
-  <div class="w-full max-w-[1200px] bg-[#f0f2f5] p-8 rounded-2xl shadow-xl border-2 border-[#e1e5ef]">
+  <div class="w-full max-w-[1200px] bg-[#f0f2f5] p-8 rounded-2xl shadow-xl border-2 border-[#e1e5ef] mb-10">
     <!--     <h1 class="text-4xl mb-8 text-center uppercase font-bold text-black">Tumbler</h1> -->
 
     <div class="py-8 relative overflow-visible">
@@ -29,7 +29,7 @@
       </div>
     </div>
 
-    <div class="flex justify-center mt-8">
+    <div class="flex justify-center mt-8  controls-toggle">
       <button id="generateBtn" disabled
         class="gradient-green text-white px-8 py-4 rounded-lg text-xl font-bold min-w-[200px] flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -40,7 +40,7 @@
       </button>
     </div>
 
-    <div class="mt-8 p-6">
+    <div class="mt-8 p-6  controls-toggle">
       <input type="url" id="sheetsUrl" class="w-full p-2 bg-white border border-gray-400 rounded-md text-base mb-4"
         placeholder="Enter Google Sheets CSV URL">
       <button id="fetchBtn"
