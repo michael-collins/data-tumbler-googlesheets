@@ -49,7 +49,6 @@ async function generateCombination() {
     setTimeout(() => {
       const column = wordColumns[index];
       const randomIndex = Math.floor(Math.random() * column.length);
-      console.log(element, column[randomIndex]);
       element.setAttribute('word', column[randomIndex]);
     }, index * 100);
   });
@@ -58,16 +57,19 @@ async function generateCombination() {
 async function fetchSheetData(url) {
   try {
     setLoading(true);
-    hideError();
-
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error('Failed to fetch sheet data. Make sure the URL is public and correctly formatted.');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    const csvData = await response.text();
-    return processCSV(csvData);
+    const csv = await response.text();
+    const result = processCSV(csv);
+    if (result.success) {
+      hideError();
+      createWordSlots(wordColumns.length, result.headers);
+    }
+    return result.success;
   } catch (error) {
+    console.error('Fetch error:', error);
     showError(error.message);
     return false;
   } finally {
@@ -77,42 +79,50 @@ async function fetchSheetData(url) {
 
 function processCSV(csv) {
   try {
-    const results = Papa.parse(csv, { header: false });
+    // Pre-process CSV and force comma delimiter for Google Sheets
+    const cleanCsv = csv.replace(/^\ufeff/, '').replace(/\r\n|\r/g, '\n');
 
-    if (results.errors.length > 0) {
-      throw new Error('Invalid CSV format');
-    }
+    const results = Papa.parse(cleanCsv, {
+      header: false,
+      skipEmptyLines: 'greedy',
+      delimiter: ',', // Force comma delimiter
+      quoteChar: '"',
+      encoding: 'UTF-8'
+    });
+
 
     const data = results.data;
-    if (data.length < 2) {
-      throw new Error('Please provide at least one header row and one data row');
+    if (!data || data.length === 0) {
+      throw new Error('No data found in CSV');
     }
 
     const headers = data[0];
-    wordColumns = [];
     const numColumns = headers.length;
 
-    for (let col = 0; col < numColumns; col++) {
-      wordColumns[col] = [];
-      for (let row = 1; row < data.length; row++) {
-        if (data[row][col]?.trim()) {
-          wordColumns[col].push(data[row][col].trim());
+
+    
+    // Reset and initialize columns array
+    wordColumns = [];
+    for (let i = 0; i < numColumns; i++) {
+      wordColumns[i] = [];
+    }
+
+    // Process data rows column by column
+    for (let row = 1; row < data.length; row++) {
+      const rowData = data[row];
+      for (let col = 0; col < numColumns; col++) {
+        if (rowData[col] && rowData[col].trim()) {
+          wordColumns[col].push(rowData[col].trim());
         }
       }
     }
 
-    if (wordColumns.some(col => col.length === 0)) {
-      throw new Error('Each column must contain at least one word');
-    }
+    return { success: true, headers: headers };
 
-    createWordSlots(numColumns, headers);
-    hideError();
-    generateBtn.disabled = false;
-    return true;
   } catch (error) {
+    console.error('Process error:', error);
     showError(error.message);
-    generateBtn.disabled = true;
-    return false;
+    return { success: false, headers: null };
   }
 }
 
