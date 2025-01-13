@@ -48,7 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
       seed: parseInt(params.get('seed')),
       sheetUrl: params.get('sheet') || DEFAULT_SHEET_URL,
       hideControls: params.get('hide-controls') === 'true',
-      hideSheetConfig: params.get('hide-sheet-config') === 'true'
+      hideSheetConfig: params.get('hide-sheet-config') === 'true',
+      hideLabels: params.get('hide-labels') === 'true'
     };
   }
 
@@ -74,10 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     wordContainer.classList.remove('hidden');
+    const params = getUrlParams();
     
     for (let i = 0; i < count; i++) {
       const slot = document.createElement('tumbler-word');
-      if (headers[i]?.trim()) {
+      if (headers[i]?.trim() && !params.hideLabels) {
         slot.setAttribute('label', headers[i]);
       }
       slot.dataset.index = i;
