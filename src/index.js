@@ -1,18 +1,15 @@
 /*
 URL Parameters for API-like access:
-- ?seed=123 : Use specific seed for consistent random combinations (e.g. ?seed=42)
+- ?seed=123 : Use specific seed for consistent random combinations
 - ?random=true : Generate new random combination
-- ?hide-controls=true : Hide all UI controls (clean view mode)
+- ?hide-controls=true : Hide all UI controls
+- ?hide-sheet-config=true : Hide the sheet upload controls
 - ?sheet=URL : Use custom Google Sheets URL (must be published to web as CSV)
-
-Examples:
-/index.html?seed=42 
-/index.html?random=true
-/index.html?hide-controls=true
-/index.html?seed=42&sheet=https%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2Fe%2F2PACX-1vS5jAMbi-ggWEDgRH3xURkCuVi2QQ_HiNPHAsq80EMMvqR0imJuaZTMSW3CdiXJtsXzAM2HQ_Hiizao%2Fpub%3Fgid%3D0%26single%3Dtrue%26output%3Dcsv
 */
+
 import Papa from 'papaparse';
 import './elements/tumbler-word.js';
+import './elements/sheet-loader.js';
 
 const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS5jAMbi-ggWEDgRH3xURkCuVi2QQ_HiNPHAsq80EMMvqR0imJuaZTMSW3CdiXJtsXzAM2HQ_Hiizao/pub?gid=0&single=true&output=csv';
 
@@ -26,16 +23,14 @@ function mulberry32(a) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const sheetsUrl = document.getElementById('sheetsUrl');
   const generateBtn = document.getElementById('generateBtn');
-  const fetchBtn = document.getElementById('fetchBtn');
   const errorDiv = document.getElementById('error');
-  const loadingIndicator = document.getElementById('loadingIndicator');
   const wordContainer = document.getElementById('wordContainer');
+  const sheetLoader = document.querySelector('sheet-loader');
 
   let loadedSheetUrl = null;
   let wordColumns = [];
-  let currentWords = [];
+  let headers = [];
 
   function showError(message) {
     errorDiv.textContent = message;
@@ -46,29 +41,31 @@ document.addEventListener('DOMContentLoaded', () => {
     errorDiv.classList.add('hidden');
   }
 
-  function setLoading(isLoading) {
-    loadingIndicator.classList.toggle('hidden', !isLoading);
-    fetchBtn.disabled = isLoading;
-    generateBtn.disabled = isLoading;
-  }
-
   function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
     return {
       random: params.get('random') === 'true',
       seed: parseInt(params.get('seed')),
       sheetUrl: params.get('sheet') || DEFAULT_SHEET_URL,
-      hideControls: params.get('hide-controls') === 'true'
+      hideControls: params.get('hide-controls') === 'true',
+      hideSheetConfig: params.get('hide-sheet-config') === 'true'
     };
   }
 
-  function setControlsVisibility(hide) {
+  function setControlsVisibility(hide, hideSheetConfig) {
+    // Hide all controls if hideControls is true
     document.querySelectorAll('.controls-toggle').forEach(element => {
       element.style.display = hide ? 'none' : '';
     });
+    
+    // Separately handle sheet config visibility
+    const sheetConfig = document.querySelector('.sheet-config');
+    if (sheetConfig) {
+      sheetConfig.style.display = (hide || hideSheetConfig) ? 'none' : '';
+    }
   }
 
-  function createWordSlots(count, headers) {
+  function createWordSlots(count) {
     wordContainer.innerHTML = '';
     
     if (count === 0 || !headers || headers.length === 0 || !getUrlParams().seed) {
@@ -80,11 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     for (let i = 0; i < count; i++) {
       const slot = document.createElement('tumbler-word');
-      slot.setAttribute('label', headers[i] || `Column ${i + 1}`);
+      if (headers[i]?.trim()) {
+        slot.setAttribute('label', headers[i]);
+      }
       slot.dataset.index = i;
       wordContainer.appendChild(slot);
     }
-    currentWords = Array(count).fill('');
   }
 
   async function generateCombination(forceNewSeed = false) {
@@ -100,16 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
       newUrl.searchParams.set('sheet', params.sheetUrl);
     }
 
-    // Push state with both sheet and seed data
     window.history.pushState({
       sheetUrl: params.sheetUrl,
       wordColumns: wordColumns,
-      headers: wordColumns.map((_, i) => `Column ${i + 1}`),
+      headers: headers,
       seed: newSeed
     }, '', newUrl);
   
     if (!wordContainer.children.length) {
-      createWordSlots(wordColumns.length, wordColumns.map((_, i) => `Column ${i + 1}`));
+      createWordSlots(wordColumns.length);
     }
   
     wordContainer.classList.remove('hidden');
@@ -126,11 +123,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchSheetData(url) {
     if (url === loadedSheetUrl) {
+      generateBtn.disabled = false; // Enable button if data already loaded
       return true;
     }
-
+  
     try {
-      setLoading(true);
+      sheetLoader?.setLoading(true);
+      generateBtn.disabled = true; // Disable during load
+      
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -139,8 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = processCSV(csv);
       if (result.success) {
         hideError();
-        createWordSlots(wordColumns.length, result.headers);
+        headers = result.headers;
+        createWordSlots(wordColumns.length);
         loadedSheetUrl = url;
+        generateBtn.disabled = false; // Enable after successful load
         return true;
       }
       return false;
@@ -149,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showError(error.message);
       return false;
     } finally {
-      setLoading(false);
+      sheetLoader?.setLoading(false);
     }
   }
 
@@ -170,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('No data found in CSV');
       }
 
-      const headers = data[0];
+      headers = data[0];
       const numColumns = headers.length;
 
       wordColumns = [];
@@ -198,28 +200,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   generateBtn.addEventListener('click', () => generateCombination(true));
 
-  fetchBtn.addEventListener('click', async () => {
-    const url = sheetsUrl.value.trim() || DEFAULT_SHEET_URL;
+  document.addEventListener('sheet-load', async (event) => {
+    const url = event.detail.url;
     if (await fetchSheetData(url)) {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('sheet', url);
-      // Store initial state after loading sheet
-      window.history.replaceState({
+      window.history.pushState({
         sheetUrl: url,
         wordColumns: wordColumns,
-        headers: wordColumns.map((_, i) => `Column ${i + 1}`),
+        headers: headers,
         seed: null
-      }, '', window.location.href);
+      }, '', newUrl);
       generateCombination();
     }
   });
 
   window.addEventListener('popstate', (event) => {
     if (event.state) {
-      const { sheetUrl, wordColumns: storedColumns, headers, seed } = event.state;
-      sheetsUrl.value = sheetUrl;
+      const { sheetUrl, wordColumns: storedColumns, headers: storedHeaders, seed } = event.state;
+      sheetLoader?.setValue(sheetUrl);
       wordColumns = storedColumns;
-      createWordSlots(wordColumns.length, headers);
+      headers = storedHeaders;
+      createWordSlots(wordColumns.length);
       
       if (seed) {
         const random = mulberry32(seed);
@@ -235,14 +237,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function init() {
     const params = getUrlParams();
-    sheetsUrl.value = params.sheetUrl;
-    setControlsVisibility(params.hideControls);
+    sheetLoader?.setValue(params.sheetUrl);
+    setControlsVisibility(params.hideControls, params.hideSheetConfig);
     if (await fetchSheetData(params.sheetUrl)) {
-      // Store initial state
       window.history.replaceState({
         sheetUrl: params.sheetUrl,
         wordColumns: wordColumns,
-        headers: wordColumns.map((_, i) => `Column ${i + 1}`),
+        headers: headers,
         seed: params.seed
       }, '', window.location.href);
       

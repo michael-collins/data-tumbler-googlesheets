@@ -40,17 +40,7 @@
       </button>
     </div>
 
-    <div class="mt-8 p-6  controls-toggle">
-      <input type="url" id="sheetsUrl" class="w-full p-2 bg-white border border-gray-400 rounded-md text-base mb-4"
-        placeholder="Enter Google Sheets CSV URL">
-      <button id="fetchBtn"
-        class="bg-gray-500 text-white px-5 py-2 rounded-md text-sm flex items-center gap-2 transition-all hover:-translate-y-0.5 hover:shadow-md">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-        </svg>
-        Load Sheet
-      </button>
-    </div>
+    <sheet-loader class="controls-toggle"></sheet-loader>
 
     <div id="error" class="hidden bg-red-100 text-red-600 p-4 rounded-lg mt-4"></div>
   </div>
