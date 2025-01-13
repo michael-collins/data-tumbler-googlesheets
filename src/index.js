@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function processCSV(csv) {
     try {
       const cleanCsv = csv.replace(/^\ufeff/, '').replace(/\r\n|\r/g, '\n');
-
+  
       const results = Papa.parse(cleanCsv, {
         header: false,
         skipEmptyLines: 'greedy',
@@ -166,21 +166,27 @@ document.addEventListener('DOMContentLoaded', () => {
         quoteChar: '"',
         encoding: 'UTF-8'
       });
-
+  
       const data = results.data;
       if (!data || data.length === 0) {
         throw new Error('No data found in CSV');
       }
-
-      headers = data[0];
+  
+      // Changed header detection logic
+      // Only treat as headerless if first row contains data-like content
+      const firstRow = data[0];
+      const isHeaderless = firstRow.length === 1 && firstRow[0]?.trim();
+      
+      headers = isHeaderless ? Array(firstRow.length).fill('') : firstRow;
+      const startRow = isHeaderless ? 0 : 1;
+  
       const numColumns = headers.length;
-
       wordColumns = [];
       for (let i = 0; i < numColumns; i++) {
         wordColumns[i] = [];
       }
-
-      for (let row = 1; row < data.length; row++) {
+  
+      for (let row = startRow; row < data.length; row++) {
         const rowData = data[row];
         for (let col = 0; col < numColumns; col++) {
           if (rowData[col] && rowData[col].trim()) {
@@ -188,9 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       }
-
+  
       return { success: true, headers: headers };
-
+  
     } catch (error) {
       console.error('Process error:', error);
       showError(error.message);
