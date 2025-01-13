@@ -68,20 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function generateShareableUrl() {
-    const url = new URL(window.location.href);
-    const params = getUrlParams();
-    if (params.seed) {
-      url.searchParams.set('seed', params.seed);
-    } else {
-      url.searchParams.set('random', 'true');
-    }
-    if (params.sheetUrl !== DEFAULT_SHEET_URL) {
-      url.searchParams.set('sheet', params.sheetUrl);
-    }
-    return url.toString();
-  }
-
   function createWordSlots(count, headers) {
     wordContainer.innerHTML = '';
     
@@ -113,7 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (params.sheetUrl !== DEFAULT_SHEET_URL) {
       newUrl.searchParams.set('sheet', params.sheetUrl);
     }
-    window.history.pushState({}, '', newUrl);
+
+    // Push state with both sheet and seed data
+    window.history.pushState({
+      sheetUrl: params.sheetUrl,
+      wordColumns: wordColumns,
+      headers: wordColumns.map((_, i) => `Column ${i + 1}`),
+      seed: newSeed
+    }, '', newUrl);
   
     if (!wordContainer.children.length) {
       createWordSlots(wordColumns.length, wordColumns.map((_, i) => `Column ${i + 1}`));
@@ -210,17 +203,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (await fetchSheetData(url)) {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set('sheet', url);
-      window.history.pushState({}, '', newUrl);
+      // Store initial state after loading sheet
+      window.history.replaceState({
+        sheetUrl: url,
+        wordColumns: wordColumns,
+        headers: wordColumns.map((_, i) => `Column ${i + 1}`),
+        seed: null
+      }, '', window.location.href);
       generateCombination();
     }
   });
 
-  window.addEventListener('popstate', async () => {
-    const params = getUrlParams();
-    sheetsUrl.value = params.sheetUrl;
-    if (await fetchSheetData(params.sheetUrl)) {
-      if (params.seed) {
-        generateCombination(false);
+  window.addEventListener('popstate', (event) => {
+    if (event.state) {
+      const { sheetUrl, wordColumns: storedColumns, headers, seed } = event.state;
+      sheetsUrl.value = sheetUrl;
+      wordColumns = storedColumns;
+      createWordSlots(wordColumns.length, headers);
+      
+      if (seed) {
+        const random = mulberry32(seed);
+        const wordElements = document.querySelectorAll('tumbler-word');
+        wordElements.forEach((element, index) => {
+          const column = wordColumns[index];
+          const randomIndex = Math.floor(random() * column.length);
+          element.setAttribute('word', column[randomIndex]);
+        });
       }
     }
   });
@@ -230,6 +238,14 @@ document.addEventListener('DOMContentLoaded', () => {
     sheetsUrl.value = params.sheetUrl;
     setControlsVisibility(params.hideControls);
     if (await fetchSheetData(params.sheetUrl)) {
+      // Store initial state
+      window.history.replaceState({
+        sheetUrl: params.sheetUrl,
+        wordColumns: wordColumns,
+        headers: wordColumns.map((_, i) => `Column ${i + 1}`),
+        seed: params.seed
+      }, '', window.location.href);
+      
       if (params.random || params.seed) {
         generateCombination(false);
       }
