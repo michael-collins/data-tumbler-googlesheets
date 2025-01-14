@@ -13,6 +13,11 @@ To change the default URL, update the `DEFAULT_SHEET_URL` value in `index.html`.
 
 URL Parameters:
 - ?seed=123 : Use specific seed for consistent random combinations (e.g. ?seed=42)
-- ?random=true : Generate new random combination
-- ?hide-controls=true : Hide all UI controls (clean view mode)
+- ?random=true : Generate new random combination (must remove the seed paramater for this to work)
+- ?hide-labels=true : Hide all labels
+- ?hide-controls=true : Hide all UI controls
 - ?sheet=URL : Use custom Google Sheets URL (must be published to web as CSV)
+
+## Known issues
+
+The label on a single column csv file does not work.
