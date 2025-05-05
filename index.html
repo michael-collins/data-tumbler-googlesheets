@@ -43,6 +43,57 @@
     <sheet-loader class="controls-toggle"></sheet-loader>
 
     <div id="error" class="hidden bg-red-100 text-red-600 p-4 rounded-lg mt-4"></div>
+
+    <!-- Iframe Generator Section -->
+    <div class="mt-12 p-6 border-t border-gray-300 controls-toggle embed-config">
+      <h2 class="text-2xl font-bold mb-4 text-center">Embed Generator</h2>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="iframe-hide-controls" class="iframe-param">
+            <span>Hide All Controls</span>
+          </label>
+        </div>
+        <div>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="iframe-hide-sheet-config" class="iframe-param">
+            <span>Hide Sheet Config</span>
+          </label>
+        </div>
+        <div>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="iframe-hide-labels" class="iframe-param">
+            <span>Hide Labels</span>
+          </label>
+        </div>
+        <div>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="iframe-use-current-sheet" class="iframe-param" checked>
+            <span>Use Current Sheet URL</span>
+          </label>
+        </div>
+        <div>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="iframe-hide-embed-config" class="iframe-param">
+            <span>Hide Embed Generator</span>
+          </label>
+        </div>
+        <div>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="iframe-random" class="iframe-param">
+            <span>Random on Load</span>
+          </label>
+        </div>
+        <div class="col-span-2">
+          <label class="block mb-2 text-sm font-medium">Specific Seed (optional)</label>
+          <input type="number" id="iframe-seed" class="w-full p-2 border border-gray-300 rounded-md bg-white iframe-param" placeholder="Enter seed number">
+        </div>
+      </div>
+      <textarea id="iframe-output" readonly class="w-full h-32 p-2 border border-gray-300 rounded-md bg-gray-100 font-mono text-sm"></textarea>
+      <button id="copy-iframe-btn" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Copy Code</button>
+    </div>
+    <!-- End Iframe Generator Section -->
+
   </div>
   <script src="/src/index.js" type="module"></script>
 </body>

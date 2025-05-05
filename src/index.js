@@ -28,6 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const wordContainer = document.getElementById('wordContainer');
   const sheetLoader = document.querySelector('sheet-loader');
 
+  // Add iframe generator elements
+  const iframeHideControls = document.getElementById('iframe-hide-controls');
+  const iframeHideSheetConfig = document.getElementById('iframe-hide-sheet-config');
+  const iframeHideLabels = document.getElementById('iframe-hide-labels');
+  const iframeUseCurrentSheet = document.getElementById('iframe-use-current-sheet');
+  const iframeHideEmbedConfig = document.getElementById('iframe-hide-embed-config');
+  const iframeRandom = document.getElementById('iframe-random');
+  const iframeSeed = document.getElementById('iframe-seed');
+  const iframeOutput = document.getElementById('iframe-output');
+  const copyIframeBtn = document.getElementById('copy-iframe-btn');
+
   let loadedSheetUrl = null;
   let wordColumns = [];
   let headers = [];
@@ -49,20 +60,28 @@ document.addEventListener('DOMContentLoaded', () => {
       sheetUrl: params.get('sheet') || DEFAULT_SHEET_URL,
       hideControls: params.get('hide-controls') === 'true',
       hideSheetConfig: params.get('hide-sheet-config') === 'true',
-      hideLabels: params.get('hide-labels') === 'true'
+      hideLabels: params.get('hide-labels') === 'true',
+      hideEmbedConfig: params.get('hide-embed-config') === 'true'
     };
   }
 
-  function setControlsVisibility(hide, hideSheetConfig) {
-    // Hide all controls if hideControls is true
+  function setControlsVisibility(hide, hideSheetConfig, hideEmbedConfig) {
     document.querySelectorAll('.controls-toggle').forEach(element => {
-      element.style.display = hide ? 'none' : '';
+      if (element.classList.contains('embed-config') && hideEmbedConfig === false) {
+         element.style.display = '';
+      } else {
+         element.style.display = hide ? 'none' : '';
+      }
     });
-    
-    // Separately handle sheet config visibility
+
     const sheetConfig = document.querySelector('.sheet-config');
     if (sheetConfig) {
       sheetConfig.style.display = (hide || hideSheetConfig) ? 'none' : '';
+    }
+
+    const embedConfig = document.querySelector('.embed-config');
+    if (embedConfig) {
+      embedConfig.style.display = (hide || hideEmbedConfig) ? 'none' : '';
     }
   }
 
@@ -125,13 +144,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchSheetData(url) {
     if (url === loadedSheetUrl) {
-      generateBtn.disabled = false; // Enable button if data already loaded
+      generateBtn.disabled = false;
       return true;
     }
   
     try {
       sheetLoader?.setLoading(true);
-      generateBtn.disabled = true; // Disable during load
+      generateBtn.disabled = true;
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -144,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headers = result.headers;
         createWordSlots(wordColumns.length);
         loadedSheetUrl = url;
-        generateBtn.disabled = false; // Enable after successful load
+        generateBtn.disabled = false;
         return true;
       }
       return false;
@@ -174,8 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('No data found in CSV');
       }
   
-      // Changed header detection logic
-      // Only treat as headerless if first row contains data-like content
       const firstRow = data[0];
       const isHeaderless = firstRow.length === 1 && firstRow[0]?.trim();
       
@@ -206,7 +223,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  generateBtn.addEventListener('click', () => generateCombination(true));
+  // Function to generate the iframe URL
+  function generateIframeUrl() {
+    const baseUrl = window.location.origin + window.location.pathname;
+    const currentParams = getUrlParams();
+    const iframeParams = new URLSearchParams();
+
+    // Handle seed and random parameters
+    if (iframeRandom.checked) {
+      iframeParams.set('random', 'true');
+    } else if (iframeSeed.value) {
+      iframeParams.set('seed', iframeSeed.value);
+    } else if (currentParams.seed) {
+      iframeParams.set('seed', currentParams.seed);
+    }
+
+    // Add params based on checkboxes
+    if (iframeHideControls.checked) {
+      iframeParams.set('hide-controls', 'true');
+    }
+    if (iframeHideSheetConfig.checked) {
+      iframeParams.set('hide-sheet-config', 'true');
+    }
+    if (iframeHideLabels.checked) {
+      iframeParams.set('hide-labels', 'true');
+    }
+    if (iframeHideEmbedConfig.checked) {
+      iframeParams.set('hide-embed-config', 'true');
+    }
+    
+    // Handle sheet URL based on checkbox
+    if (iframeUseCurrentSheet.checked) {
+      if (currentParams.sheetUrl && currentParams.sheetUrl !== DEFAULT_SHEET_URL) {
+        iframeParams.set('sheet', currentParams.sheetUrl);
+      }
+    } else {
+      iframeParams.set('sheet', DEFAULT_SHEET_URL);
+    }
+
+    const queryString = iframeParams.toString();
+    return `${baseUrl}${queryString ? '?' + queryString : ''}`;
+  }
+
+  // Function to update the iframe output
+  function updateIframeOutput() {
+    const iframeUrl = generateIframeUrl();
+    const embedCode = `<iframe src="${iframeUrl}" width="100%" height="400" frameborder="0"></iframe>`;
+    if (iframeOutput) {
+      iframeOutput.value = embedCode;
+    }
+  }
+
+  generateBtn.addEventListener('click', () => {
+    generateCombination(true);
+    updateIframeOutput();
+  });
 
   document.addEventListener('sheet-load', async (event) => {
     const url = event.detail.url;
@@ -220,6 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         seed: null
       }, '', newUrl);
       generateCombination();
+      updateIframeOutput();
     }
   });
 
@@ -240,13 +312,43 @@ document.addEventListener('DOMContentLoaded', () => {
           element.setAttribute('word', column[randomIndex]);
         });
       }
+      updateIframeOutput();
     }
+  });
+
+  // Event listeners for iframe parameters
+  document.querySelectorAll('.iframe-param').forEach(input => {
+    if (input.type === 'checkbox') {
+      input.addEventListener('change', () => {
+        if (input.id === 'iframe-random' && input.checked) {
+          iframeSeed.value = '';
+        }
+        updateIframeOutput();
+      });
+    } else if (input.type === 'number') {
+      input.addEventListener('input', () => {
+        if (input.value) {
+          iframeRandom.checked = false;
+        }
+        updateIframeOutput();
+      });
+    }
+  });
+
+  // Copy button functionality
+  copyIframeBtn.addEventListener('click', () => {
+    iframeOutput.select();
+    document.execCommand('copy');
+    copyIframeBtn.textContent = 'Copied!';
+    setTimeout(() => {
+      copyIframeBtn.textContent = 'Copy Code';
+    }, 1500);
   });
 
   async function init() {
     const params = getUrlParams();
     sheetLoader?.setValue(params.sheetUrl);
-    setControlsVisibility(params.hideControls, params.hideSheetConfig);
+    setControlsVisibility(params.hideControls, params.hideSheetConfig, params.hideEmbedConfig);
     if (await fetchSheetData(params.sheetUrl)) {
       window.history.replaceState({
         sheetUrl: params.sheetUrl,
@@ -259,6 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
         generateCombination(false);
       }
     }
+    updateIframeOutput();
   }
 
   init();
