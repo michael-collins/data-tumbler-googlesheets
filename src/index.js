@@ -7,9 +7,10 @@ URL Parameters for API-like access:
 - ?sheet=URL : Use custom Google Sheets URL (must be published to web as CSV)
 */
 
-import Papa from 'papaparse';
 import './elements/tumbler-word.js';
 import './elements/sheet-loader.js';
+
+const Papa = window.Papa;  // Use Papa from global scope
 
 const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS5jAMbi-ggWEDgRH3xURkCuVi2QQ_HiNPHAsq80EMMvqR0imJuaZTMSW3CdiXJtsXzAM2HQ_Hiizao/pub?gid=0&single=true&output=csv';
 
