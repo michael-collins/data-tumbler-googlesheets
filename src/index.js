@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function processCSV(csv) {
     try {
       const cleanCsv = csv.replace(/^\ufeff/, '').replace(/\r\n|\r/g, '\n');
-  
+
       const results = Papa.parse(cleanCsv, {
         header: false,
         skipEmptyLines: 'greedy',
@@ -188,35 +188,41 @@ document.addEventListener('DOMContentLoaded', () => {
         quoteChar: '"',
         encoding: 'UTF-8'
       });
-  
+
       const data = results.data;
       if (!data || data.length === 0) {
         throw new Error('No data found in CSV');
       }
-  
-      const firstRow = data[0];
-      const isHeaderless = firstRow.length === 1 && firstRow[0]?.trim();
-      
-      headers = isHeaderless ? Array(firstRow.length).fill('') : firstRow;
-      const startRow = isHeaderless ? 0 : 1;
-  
+
+      // Always treat the first row as headers
+      headers = data[0];
+      const startRow = 1; // Always start processing data from the second row
+
       const numColumns = headers.length;
       wordColumns = [];
       for (let i = 0; i < numColumns; i++) {
         wordColumns[i] = [];
       }
-  
+
       for (let row = startRow; row < data.length; row++) {
         const rowData = data[row];
+        // Ensure rowData has the expected number of columns, padding if necessary
+        const paddedRowData = Array.from({ length: numColumns }, (_, i) => rowData[i] || ''); 
         for (let col = 0; col < numColumns; col++) {
-          if (rowData[col] && rowData[col].trim()) {
-            wordColumns[col].push(rowData[col].trim());
+          if (paddedRowData[col] && paddedRowData[col].trim()) {
+            wordColumns[col].push(paddedRowData[col].trim());
           }
         }
       }
-  
+
+      // Filter out columns that ended up empty (e.g., if header existed but no data below it)
+      const nonEmptyColumnsIndices = wordColumns.map((col, index) => col.length > 0 ? index : -1).filter(index => index !== -1);
+      headers = nonEmptyColumnsIndices.map(index => headers[index]);
+      wordColumns = nonEmptyColumnsIndices.map(index => wordColumns[index]);
+
+
       return { success: true, headers: headers };
-  
+
     } catch (error) {
       console.error('Process error:', error);
       showError(error.message);
